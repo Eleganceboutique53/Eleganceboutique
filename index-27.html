@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L'Élégance Boutique</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#faf6ee;color:#241a10}
+header{background:#2d1b0e;color:#fff;text-align:center;padding:28px 15px}
+h1{font-family:Georgia,serif;margin:0;font-size:32px}
+main{max-width:1000px;margin:auto;padding:18px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+button{border:0;border-radius:12px;padding:13px 16px;font-weight:bold;font-size:15px}
+.gold{background:#b8872d;color:#fff}.light{background:#eee}.hide{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{background:#fff;border-radius:18px;overflow:hidden;border:1px solid #eadfce}
+.card img{width:100%;height:290px;object-fit:cover}.body{padding:14px}
+.price{font-size:21px;font-weight:bold;color:#9b6814}
+.old{text-decoration:line-through;color:#888;font-size:13px;margin-left:5px}
+.meta{color:#666;margin:7px 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px;z-index:20}
+.modal.show{display:flex}.box{background:#fff;padding:20px;border-radius:18px;width:min(650px,100%);max-height:90vh;overflow:auto}
+label{display:block;font-weight:bold;margin:12px 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;box-sizing:border-box}
+.preview{display:grid;gap:10px;margin-top:12px}
+.item{border:1px solid #ddd;border-radius:14px;padding:10px;background:#fafafa}
+.itemrow{display:grid;grid-template-columns:80px 1fr;gap:10px;align-items:start}
+.item img{width:80px;height:90px;object-fit:cover;border-radius:9px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.empty{text-align:center;padding:50px;border:2px dashed #ddd}
+.small{font-size:13px;color:#666}
+</style>
+</head>
+<body>
+<header>
+<h1>ÉLÉGANCE BOUTIQUE</h1>
+<p class="tagline">L’élégance à votre portée</p>
+<p>Mode Homme & Femme • Disponible partout à Abidjan</p>
+<p>WhatsApp : <b>07 08 76 90 21</b></p>
+</header>
+
+<main>
+<div class="bar">
+<button id="loginBtn" class="gold">🔐 Espace propriétaire</button>
+<button id="addBtn" class="light hide">＋ Ajouter plusieurs vêtements</button>
+<button id="outBtn" class="light hide">Se déconnecter</button>
+</div>
+<div id="grid" class="grid"></div>
+<div id="empty" class="empty hide">Aucun article pour le moment.</div>
+</main>
+
+<div id="loginBox" class="modal">
+<div class="box">
+<h2>Espace propriétaire</h2>
+<input id="pin" type="password" inputmode="numeric" placeholder="Code propriétaire">
+<div class="actions" style="margin-top:15px">
+<button id="checkPinBtn" class="gold">Entrer</button>
+<button id="closeLoginBtn" class="light">Annuler</button>
+</div>
+</div>
+</div>
+
+<div id="addBox" class="modal">
+<div class="box">
+<h2>Ajouter plusieurs vêtements</h2>
+<p class="small">Sélectionne plusieurs photos. Chaque photo deviendra un vêtement indépendant. Tu peux ensuite donner à chaque vêtement son propre nom et son propre prix.</p>
+<label>Photos — plusieurs sélection possibles</label>
+<input id="photos" type="file" accept="image/*" multiple>
+<div id="preview" class="preview"></div>
+<div class="actions" style="margin-top:16px">
+<button id="saveProductsBtn" class="gold">Ajouter au catalogue</button>
+<button id="closeAddBtn" class="light">Annuler</button>
+</div>
+</div>
+</div>
+
+<script>
+const KEY="elegance_boutique_multi_final_v3";
+const PIN="2580";
+let products=JSON.parse(localStorage.getItem(KEY)||"[]");
+let admin=false;
+let selected=[];
+
+const $=id=>document.getElementById(id);
+const grid=$("grid"), empty=$("empty"), loginBox=$("loginBox"), addBox=$("addBox");
+const pin=$("pin"), photos=$("photos"), preview=$("preview");
+
+function save(){localStorage.setItem(KEY,JSON.stringify(products));render();}
+
+function login(){
+  loginBox.classList.add("show");
+  pin.value="";
+  setTimeout(()=>pin.focus(),100);
+}
+function closeLogin(){loginBox.classList.remove("show");}
+function checkPin(){
+  if(pin.value.trim()===PIN){
+    admin=true;
+    closeLogin();
+    $("addBtn").classList.remove("hide");
+    $("outBtn").classList.remove("hide");
+    render();
+  }else{
+    alert("Code invalide.");
+    pin.focus();
+  }
+}
+function logout(){
+  admin=false;
+  $("addBtn").classList.add("hide");
+  $("outBtn").classList.add("hide");
+  render();
+}
+function openAdd(){
+  if(!admin){login();return;}
+  selected=[];
+  photos.value="";
+  preview.innerHTML="";
+  addBox.classList.add("show");
+}
+function closeAdd(){addBox.classList.remove("show");}
+
+$("loginBtn").addEventListener("click",login);
+$("addBtn").addEventListener("click",openAdd);
+$("outBtn").addEventListener("click",logout);
+$("checkPinBtn").addEventListener("click",checkPin);
+$("closeLoginBtn").addEventListener("click",closeLogin);
+$("closeAddBtn").addEventListener("click",closeAdd);
+$("saveProductsBtn").addEventListener("click",addProducts);
+
+pin.addEventListener("keydown",e=>{if(e.key==="Enter")checkPin();});
+
+photos.addEventListener("change",async()=>{
+  selected=[];
+  preview.innerHTML="";
+  const files=Array.from(photos.files||[]);
+  if(!files.length)return;
+  for(const file of files){
+    if(!file.type.startsWith("image/"))continue;
+    selected.push({
+      image:await readFile(file),
+      name:"",
+      price:"",
+      old:""
+    });
+  }
+  drawPreview();
+});
+
+function readFile(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result);
+    r.onerror=()=>reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+function drawPreview(){
+  preview.innerHTML="";
+  selected.forEach((p,i)=>{
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML=`
+      <div class="itemrow">
+        <img src="${p.image}">
+        <div>
+          <b>Vêtement ${i+1}</b>
+          <label>Nom du modèle</label>
+          <input class="pname" data-i="${i}" placeholder="Ex. Chemise élégante">
+          <div class="two">
+            <div>
+              <label>Prix (FCFA)</label>
+              <input class="pprice" data-i="${i}" type="number" inputmode="numeric" placeholder="12000">
+            </div>
+            <div>
+              <label>Ancien prix (facultatif)</label>
+              <input class="pold" data-i="${i}" type="number" inputmode="numeric" placeholder="15000">
+            </div>
+          </div>
+          <div class="small">Tailles client : M, L, XL, XXL</div>
+        </div>
+      </div>`;
+    preview.appendChild(div);
+  });
+  preview.querySelectorAll("input").forEach(inp=>{
+    inp.addEventListener("input",()=>{
+      const i=Number(inp.dataset.i);
+      if(inp.classList.contains("pname"))selected[i].name=inp.value;
+      if(inp.classList.contains("pprice"))selected[i].price=inp.value;
+      if(inp.classList.contains("pold"))selected[i].old=inp.value;
+    });
+  });
+}
+
+function addProducts(){
+  if(!admin){alert("Entre d'abord dans l'espace propriétaire.");return;}
+  if(!selected.length){
+    alert("Sélectionne au moins une photo.");
+    return;
+  }
+  for(let i=0;i<selected.length;i++){
+    if(!selected[i].name.trim()||!selected[i].price){
+      alert("Complète le nom et le prix du vêtement "+(i+1)+".");
+      return;
+    }
+  }
+  const now=Date.now();
+  selected.forEach((p,i)=>{
+    products.unshift({
+      id:String(now)+"_"+i+"_"+Math.random().toString(36).slice(2,8),
+      image:p.image,
+      name:p.name.trim(),
+      price:Number(p.price),
+      old:Number(p.old||0),
+      sizes:["M","L","XL","XXL"]
+    });
+  });
+  save();
+  closeAdd();
+  alert(selected.length+" vêtement(s) ajouté(s) au catalogue.");
+}
+
+function del(id){
+  if(!admin)return;
+  if(confirm("Supprimer cet article ?")){
+    products=products.filter(p=>String(p.id)!==String(id));
+    save();
+  }
+}
+
+function order(id, button){
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p)return;
+
+  const card=button?button.closest(".card"):null;
+  const select=card?card.querySelector("select"):null;
+  const chosen=select?String(select.value||"").trim():"";
+  const deliveryInput=card?card.querySelector(".deliveryLocation"):null;
+  const deliveryLocation=deliveryInput?String(deliveryInput.value||"").trim():"";
+
+  if(!chosen){
+    alert("Choisis ta taille avant de commander.");
+    return;
+  }
+
+  if(!deliveryLocation){
+    alert("Indique ton lieu de livraison avant de commander.");
+    if(deliveryInput)deliveryInput.focus();
+    return;
+  }
+
+  const text=`Bonjour Élégance Boutique 👋
+Je souhaite commander :
+👕 Modèle : ${p.name}
+💰 Prix : ${Number(p.price).toLocaleString("fr-FR")} FCFA
+📏 Taille choisie : ${chosen}
+📍 Lieu de livraison : ${deliveryLocation}`;
+
+  // Ouverture DIRECTE de WhatsApp vers le numéro de l'entreprise.
+  // Aucun menu de partage du téléphone et aucune sélection de contact.
+  const whatsappUrl="https://wa.me/2250708769021?text="+encodeURIComponent(text);
+  window.location.href=whatsappUrl;
+}
+
+function render(){
+  grid.innerHTML="";
+  empty.classList.toggle("hide",products.length>0);
+  products.forEach(p=>{
+    const card=document.createElement("article");
+    card.className="card";
+    const sizes=(p.sizes&&p.sizes.length?p.sizes:["M","L","XL","XXL"]);
+    card.innerHTML=`
+      <img src="${p.image}" alt="${esc(p.name)}">
+      <div class="body">
+        <b>${esc(p.name)}</b>
+        <div class="price">${Number(p.price).toLocaleString("fr-FR")} FCFA ${p.old?`<span class="old">${Number(p.old).toLocaleString("fr-FR")} FCFA</span>`:""}</div>
+        <div class="meta">Prix fixe • Disponible partout à Abidjan</div>
+        <label>Choisir sa taille</label>
+        <select id="size_${esc(p.id)}">
+          <option value="">Choisir une taille</option>
+          ${sizes.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("")}
+        </select>
+
+        <label style="display:block;margin-top:12px">Lieu de livraison</label>
+        <input
+          class="deliveryLocation"
+          type="text"
+          placeholder="Ex. Cocody, Marcory, Yopougon..."
+          autocomplete="street-address"
+          style="width:100%;box-sizing:border-box;padding:14px;border:1px solid #ddd;border-radius:12px;font-size:16px;"
+        >
+
+        <div class="actions" style="margin-top:10px">
+          <button class="gold orderBtn">Commander WhatsApp</button>
+          ${admin?`<button class="light deleteBtn">Supprimer</button>`:""}
+        </div>
+      </div>`;
+    card.querySelector(".orderBtn").addEventListener("click",(e)=>{ e.preventDefault(); order(p.id, e.currentTarget); });
+    if(admin)card.querySelector(".deleteBtn").addEventListener("click",()=>del(p.id));
+    grid.appendChild(card);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
