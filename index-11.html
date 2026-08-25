@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>L'Élégance Boutique</title>
+<style>
+body{margin:0;font-family:Arial;background:#faf6ee;color:#241a10}header{background:#2d1b0e;color:#fff;text-align:center;padding:28px 15px}h1{font-family:Georgia;margin:0;font-size:32px}main{max-width:1000px;margin:auto;padding:18px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}button{border:0;border-radius:12px;padding:13px 16px;font-weight:bold}.gold{background:#b8872d;color:#fff}.light{background:#eee}.hide{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}.card{background:#fff;border-radius:18px;overflow:hidden;border:1px solid #eadfce}.card img{width:100%;height:290px;object-fit:cover}.body{padding:14px}.price{font-size:21px;font-weight:bold;color:#9b6814}.old{text-decoration:line-through;color:#888;font-size:13px;margin-left:5px}.meta{color:#666;margin:7px 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:15px}.modal.show{display:flex}.box{background:#fff;padding:20px;border-radius:18px;width:min(500px,100%);max-height:90vh;overflow:auto}label{display:block;font-weight:bold;margin:12px 0 6px}input{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;box-sizing:border-box}.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.thumbs img{width:80px;height:80px;object-fit:cover;border-radius:9px}.empty{text-align:center;padding:50px;border:2px dashed #ddd}
+</style>
+</head>
+<body>
+<header><h1>L'ÉLÉGANCE BOUTIQUE</h1><p>Mode Homme & Femme • Disponible partout à Abidjan</p><p>WhatsApp : <b>07 08 76 90 21</b></p></header>
+<main>
+<div class="bar">
+<button class="gold" onclick="login()">🔐 Espace propriétaire</button>
+<button id="addBtn" class="light hide" onclick="openAdd()">＋ Ajouter plusieurs photos</button>
+<button id="outBtn" class="light hide" onclick="logout()">Se déconnecter</button>
+</div>
+<div id="grid" class="grid"></div><div id="empty" class="empty hide">Aucun article pour le moment.</div>
+</main>
+
+<div id="loginBox" class="modal"><div class="box"><h2>Espace propriétaire</h2><input id="pin" type="password" inputmode="numeric" placeholder="Code propriétaire"><div class="actions" style="margin-top:15px"><button class="gold" onclick="checkPin()">Entrer</button><button class="light" onclick="closeLogin()">Annuler</button></div></div></div>
+
+<div id="addBox" class="modal"><div class="box">
+<h2>Ajouter des vêtements</h2>
+<label>Photos — tu peux en sélectionner plusieurs</label>
+<input id="photos" type="file" accept="image/*" multiple>
+<div id="thumbs" class="thumbs"></div>
+<label>Nom du modèle</label><input id="name" placeholder="Ex. Modèle homme">
+<label>Prix actuel (FCFA)</label><input id="price" type="number" inputmode="numeric" placeholder="12000">
+<label>Ancien prix (facultatif)</label><input id="old" type="number" inputmode="numeric" placeholder="15000">
+<label>Taille</label><input id="size" value="M à 2XL">
+<div class="actions" style="margin-top:16px"><button class="gold" onclick="addProducts()">Ajouter au catalogue</button><button class="light" onclick="closeAdd()">Annuler</button></div>
+</div></div>
+
+<script>
+const KEY="elegance_boutique_multi_final";
+const PIN="2580";
+let products=JSON.parse(localStorage.getItem(KEY)||"[]"),admin=false,selected=[];
+
+function save(){localStorage.setItem(KEY,JSON.stringify(products));render()}
+function login(){loginBox.classList.add("show");pin.focus()}
+function closeLogin(){loginBox.classList.remove("show")}
+function checkPin(){if(pin.value===PIN){admin=true;closeLogin();addBtn.classList.remove("hide");outBtn.classList.remove("hide");render()}else alert("Code invalide")}
+function logout(){admin=false;addBtn.classList.add("hide");outBtn.classList.add("hide");render()}
+function openAdd(){if(!admin)return login();selected=[];photos.value="";thumbs.innerHTML="";name.value="";price.value="";old.value="";size.value="M à 2XL";addBox.classList.add("show")}
+function closeAdd(){addBox.classList.remove("show")}
+photos.onchange=()=>{
+ selected=[];
+ thumbs.innerHTML="";
+ [...photos.files].forEach(file=>{
+   const r=new FileReader();
+   r.onload=e=>{selected.push(e.target.result);const im=document.createElement("img");im.src=e.target.result;thumbs.appendChild(im)}
+   r.readAsDataURL(file);
+ });
+}
+function addProducts(){
+ if(!selected.length)return alert("Sélectionne au moins une photo.");
+ if(!name.value.trim()||!price.value)return alert("Mets le nom et le prix.");
+ selected.forEach((img,i)=>products.unshift({id:Date.now()+"_"+i,image:img,name:selected.length>1?name.value.trim()+" "+(i+1):name.value.trim(),price:Number(price.value),old:Number(old.value||0),size:size.value.trim()||"M à 2XL"}));
+ save();closeAdd();alert(selected.length+" photo(s) ajoutée(s).");
+}
+function del(id){if(admin&&confirm("Supprimer cet article ?")){products=products.filter(p=>String(p.id)!==String(id));save()}}
+function order(p){
+ const chosen=document.getElementById("size-"+p.id)?.value||"";
+ if(!chosen){alert("Choisis ta taille avant de commander.");return}
+ const txt=`Bonjour L'Élégance Boutique 👋
+Je souhaite commander :
+👕 Modèle : ${p.name}
+💰 Prix : ${Number(p.price).toLocaleString("fr-FR")} FCFA
+📏 Taille choisie : ${chosen}
+📍 Abidjan`;
+ location.href="https://wa.me/2250708769021?text="+encodeURIComponent(txt)
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function render(){
+ grid.innerHTML="";
+ empty.classList.toggle("hide",products.length>0);
+ products.forEach(p=>{grid.innerHTML+=`<article class="card"><img src="${p.image}"><div class="body"><b>${esc(p.name)}</b><div class="price">${p.price.toLocaleString("fr-FR")} FCFA ${p.old?`<span class="old">${p.old.toLocaleString("fr-FR")} FCFA</span>`:""}</div><div class="meta">Taille disponible : ${esc(p.size)}</div><label style="display:block;font-weight:bold;margin:8px 0 5px">Choisir sa taille</label><select id="size-${p.id}" style="width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;font-size:16px"><option value="">Choisir une taille</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select><br><br><div class="actions"><button class="gold" onclick='order(${JSON.stringify(p)})'>Commander WhatsApp</button>${admin?`<button class="light" onclick="del('${p.id}')">Supprimer</button>`:""}</div></div></article>`})
+}
+render();
+</script>
+</body>
+</html>
