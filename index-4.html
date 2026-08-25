@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#4b2a12">
+<title>L'Élégance Boutique</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fbf7ef;color:#29231d;font-family:Arial,sans-serif}
+header{background:linear-gradient(135deg,#351c0c,#704516);color:#fff;text-align:center;padding:38px 16px}
+h1{font-family:Georgia,serif;font-size:34px;margin:0 0 12px}header p{font-size:18px;margin:0}
+main{max-width:1050px;margin:auto;padding:22px 15px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+button{border:0;border-radius:14px;padding:13px 17px;font-size:16px;font-weight:700;cursor:pointer}
+.gold{background:#c4932e;color:#fff}.light{background:#eee;color:#222}.red{background:#9c2e23;color:#fff}
+.adminbar{display:none;background:#efe0b9;border:1px solid #d6bb7d;border-radius:16px;padding:13px 15px;margin-bottom:18px}
+.adminbar.on{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.card{background:#fff;border:1px solid #e7dccb;border-radius:20px;padding:17px;margin-bottom:20px;box-shadow:0 5px 18px #0000000d}
+.info{font-size:17px;line-height:1.6}
+#products{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:18px}
+.product{background:#fff;border:1px solid #e4d8c7;border-radius:18px;overflow:hidden;box-shadow:0 4px 15px #00000012}
+.product img{width:100%;height:300px;object-fit:cover;background:#eee}
+.body{padding:15px}.body h3{margin:0 0 7px;font-size:20px}
+.price{font-size:22px;font-weight:800;color:#986710}.size{color:#70675e;margin-top:7px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.actions button{padding:9px 11px;font-size:14px}
+.empty{text-align:center;padding:55px 20px;border:2px dashed #e1d5c3;border-radius:20px;color:#786f65;font-size:18px}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:15px}.modal.show{display:flex}
+.form{background:#fff;border-radius:20px;padding:21px;width:min(500px,100%);max-height:92vh;overflow:auto}
+.form h2{margin:0 0 15px}label{display:block;font-weight:700;margin:12px 0 6px}
+input{width:100%;padding:13px;border:1px solid #d5c7b5;border-radius:10px;font-size:16px}
+.preview{width:100%;max-height:240px;object-fit:contain;border-radius:12px;margin-top:10px;display:none}
+.form-actions{display:flex;gap:10px;margin-top:18px}.form-actions button{flex:1}
+.hint{font-size:13px;color:#746b62;margin-top:8px}
+footer{text-align:center;padding:30px;color:#776e64}
+@media(max-width:520px){h1{font-size:29px}.product img{height:330px}}
+</style>
+</head>
+<body>
+<header>
+<h1>L'ÉLÉGANCE BOUTIQUE</h1>
+<p>Mode homme & femme • Disponible partout à Abidjan</p>
+</header>
+
+<main>
+<div class="toolbar">
+  <button class="gold" onclick="adminAction()">🔐 Espace propriétaire</button>
+  <button class="gold adminOnly" onclick="openForm()">＋ Ajouter un article</button>
+  <button class="gold adminOnly" onclick="document.getElementById('multiPhoto').click()">📷 Ajouter plusieurs photos</button>
+  <button class="light adminOnly" onclick="exportCatalog()">💾 Sauvegarder</button>
+  <button class="light adminOnly" onclick="document.getElementById('importCatalogInput').click()">📥 Importer catalogue</button>
+  <input id="multiPhoto" type="file" accept="image/*" multiple hidden onchange="addMultiplePhotos(event)">
+  <input id="importCatalogInput" type="file" accept=".json,application/json" hidden onchange="importCatalog(event)">
+</div>
+
+<div class="adminbar" id="adminbar">
+  <span>🔓 <b>Mode propriétaire activé</b> — seuls les boutons de gestion sont visibles pour toi.</span>
+  <button class="light" onclick="logout()">Verrouiller</button>
+</div>
+
+<div class="card info">
+📲 <b>Commandes WhatsApp : 07 08 76 90 21</b><br>
+Disponible partout à Abidjan. Les clients peuvent voir les articles et commander par WhatsApp.
+</div>
+
+<div id="products"></div>
+</main>
+<footer>© L'Élégance Boutique — Abidjan</footer>
+
+<!-- Connexion propriétaire -->
+<div class="modal" id="pinModal">
+ <div class="form">
+  <h2>🔐 Accès propriétaire</h2>
+  <p>Entre ton code pour ajouter, modifier ou supprimer les vêtements.</p>
+  <label>Code propriétaire</label>
+  <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="Ton code">
+  <div class="form-actions">
+   <button class="light" onclick="closePin()">Annuler</button>
+   <button class="gold" onclick="login()">Entrer</button>
+  </div>
+  <div class="hint">Le code initial est <b>2580</b>. Tu peux le changer dans le fichier index.html.</div>
+ </div>
+</div>
+
+<!-- Article -->
+<div class="modal" id="itemModal">
+ <div class="form">
+  <h2 id="formTitle">Ajouter un article</h2>
+  <input type="hidden" id="editId">
+  <label>Photo de l'habit *</label>
+  <input id="photo" type="file" accept="image/*" capture="environment" onchange="previewPhoto(event)">
+  <img id="preview" class="preview">
+  <label>Nom de l'article *</label>
+  <input id="name" placeholder="Ex. Chemise homme 4 poches">
+  <label>Prix (FCFA) *</label>
+  <input id="price" type="number" inputmode="numeric" placeholder="12000">
+  <label>Taille</label>
+  <input id="size" placeholder="Ex. M à 2XL">
+  <div class="form-actions">
+   <button class="light" onclick="closeForm()">Annuler</button>
+   <button class="gold" onclick="saveProduct()">Enregistrer</button>
+  </div>
+ </div>
+</div>
+
+<script>
+const PRODUCTS_KEY="elegance_products_v3";
+const ADMIN_KEY="elegance_admin_v3";
+const OWNER_PIN="2580"; // CHANGE CE CODE SI TU VEUX
+let products=JSON.parse(localStorage.getItem(PRODUCTS_KEY)||"[]");
+let admin=sessionStorage.getItem(ADMIN_KEY)==="1";
+let currentPhoto="";
+
+function persist(){localStorage.setItem(PRODUCTS_KEY,JSON.stringify(products))}
+function adminAction(){
+ if(admin){logout();return}
+ document.getElementById("pinModal").classList.add("show");
+ setTimeout(()=>document.getElementById("pin").focus(),100);
+}
+function login(){
+ if(document.getElementById("pin").value===OWNER_PIN){
+   admin=true;sessionStorage.setItem(ADMIN_KEY,"1");closePin();render();
+ }else alert("Code incorrect.");
+}
+function closePin(){document.getElementById("pinModal").classList.remove("show");document.getElementById("pin").value=""}
+function logout(){admin=false;sessionStorage.removeItem(ADMIN_KEY);render()}
+function openForm(id=null){
+ if(!admin)return alert("Accès propriétaire requis.");
+ document.getElementById("itemModal").classList.add("show");
+ document.getElementById("editId").value=id||"";
+ document.getElementById("formTitle").textContent=id?"Modifier l'article":"Ajouter un article";
+ document.getElementById("photo").value=""; currentPhoto="";
+ document.getElementById("preview").style.display="none";
+ if(id){
+   const p=products.find(x=>x.id===id); if(!p)return;
+   document.getElementById("name").value=p.name;
+   document.getElementById("price").value=p.price;
+   document.getElementById("size").value=p.size||"";
+   currentPhoto=p.photo;document.getElementById("preview").src=p.photo;document.getElementById("preview").style.display="block";
+ }else{
+   document.getElementById("name").value="";document.getElementById("price").value="";document.getElementById("size").value="";
+ }
+}
+function closeForm(){document.getElementById("itemModal").classList.remove("show")}
+function previewPhoto(e){
+ const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();r.onload=()=>{currentPhoto=r.result;document.getElementById("preview").src=currentPhoto;document.getElementById("preview").style.display="block"};r.readAsDataURL(f);
+}
+function saveProduct(){
+ if(!admin)return;
+ const name=document.getElementById("name").value.trim(),price=document.getElementById("price").value.trim(),size=document.getElementById("size").value.trim(),id=document.getElementById("editId").value;
+ if(!name||!price||!currentPhoto){alert("Ajoute la photo, le nom et le prix.");return}
+ if(id){let p=products.find(x=>x.id===id);p.name=name;p.price=price;p.size=size;p.photo=currentPhoto}
+ else products.unshift({id:Date.now().toString(),name,price,size,photo:currentPhoto});
+ persist();render();closeForm();
+}
+function addMultiplePhotos(e){
+ if(!admin)return;
+ const files=[...e.target.files]; if(!files.length)return;
+ let done=0;
+ files.forEach(file=>{
+  const r=new FileReader();
+  r.onload=()=>{products.unshift({id:Date.now().toString()+Math.random(),name:file.name.replace(/\.[^.]+$/,"")||"Nouvel article",price:"",size:"",photo:r.result});done++;if(done===files.length){persist();render();alert(files.length+" photo(s) ajoutée(s). Modifie ensuite chaque article pour mettre le prix et la taille.")}};
+  r.readAsDataURL(file);
+ });
+ e.target.value="";
+}
+function deleteProduct(id){
+ if(!admin)return alert("Accès propriétaire requis.");
+ if(confirm("Supprimer cet article ?")){products=products.filter(p=>p.id!==id);persist();render()}
+}
+function whatsapp(p){
+ const txt=`Bonjour, je suis intéressé(e) par : ${p.name}. Prix : ${p.price||"à préciser"} FCFA. Taille : ${p.size||"à préciser"}.`;
+ window.open("https://wa.me/2250708769021?text="+encodeURIComponent(txt),"_blank");
+}
+function render(){
+ document.getElementById("adminbar").classList.toggle("on",admin);
+ document.querySelectorAll(".adminOnly").forEach(x=>x.style.display=admin?"inline-block":"none");
+ const box=document.getElementById("products");
+ if(!products.length){box.innerHTML='<div class="empty">Aucun article pour le moment.</div>';return}
+ box.innerHTML=products.map(p=>`
+ <article class="product">
+  <img src="${p.photo}" alt="${esc(p.name)}">
+  <div class="body">
+   <h3>${esc(p.name)}</h3>
+   <div class="price">${p.price?Number(p.price).toLocaleString("fr-FR")+" FCFA":"Prix à définir"}</div>
+   <div class="size">Taille : ${esc(p.size||"à préciser")}</div>
+   <div class="actions">
+    <button class="gold" onclick='whatsapp(${JSON.stringify(p).replace(/'/g,"&#39;")})'>📲 Commander</button>
+    ${admin?`<button class="light" onclick="openForm('${p.id}')">✏️ Modifier</button><button class="red" onclick="deleteProduct('${p.id}')">🗑️ Supprimer</button>`:""}
+   </div>
+  </div>
+ </article>`).join("");
+}
+function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function exportCatalog(){
+ const blob=new Blob([JSON.stringify(products)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download="catalogue-elegance.json";a.click();URL.revokeObjectURL(a.href)
+}
+function importCatalog(e){
+ if(!admin)return;
+ const f=e.target.files[0];if(!f)return;
+ const r=new FileReader();r.onload=()=>{
+  try{const data=JSON.parse(r.result);if(!Array.isArray(data))throw 0;products=data;persist();render();alert("Catalogue importé avec succès.")}catch(x){alert("Fichier catalogue invalide. Pour les photos, utilise « Ajouter plusieurs photos ».")}
+ };r.readAsText(f);e.target.value="";
+}
+render();
+</script>
+</body>
+</html>
