@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Élégance Boutique — L’élégance à votre portée</title>
+<meta name="description" content="Élégance Boutique — L’élégance à votre portée. Mode homme et femme, commande WhatsApp et livraison en Côte d’Ivoire.">
+<link rel="canonical" href="https://eleganceboutique53.github.io/Eleganceboutique/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Élégance Boutique">
+<meta property="og:title" content="Élégance Boutique — L’élégance à votre portée">
+<meta property="og:description" content="Mode homme & femme • Commande directement sur WhatsApp • Livraison en Côte d’Ivoire">
+<meta property="og:url" content="https://eleganceboutique53.github.io/Eleganceboutique/">
+<meta property="og:image" content="https://eleganceboutique53.github.io/Eleganceboutique/preview.jpg?v=2">
+<meta property="og:image:secure_url" content="https://eleganceboutique53.github.io/Eleganceboutique/preview.jpg?v=2">
+<meta property="og:image:alt" content="Élégance Boutique — Nouvelle collection">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Élégance Boutique — L’élégance à votre portée">
+<meta name="twitter:description" content="Mode homme & femme • Commande directement sur WhatsApp • Livraison en Côte d’Ivoire">
+<meta name="twitter:image" content="https://eleganceboutique53.github.io/Eleganceboutique/preview.jpg?v=2">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Élégance Boutique — L’élégance à votre portée">
+<meta name="twitter:description" content="Mode homme & femme • Commande directement sur WhatsApp">
+<meta name="twitter:image" content="https://eleganceboutique53.github.io/Eleganceboutique/preview.jpg">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#faf6ee;color:#241a10}
+header{background:#2d1b0e;color:#fff;text-align:center;padding:28px 15px}
+h1{font-family:Georgia,serif;margin:0;font-size:32px}.tagline{font-size:20px}
+main{max-width:1000px;margin:auto;padding:18px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+button{border:0;border-radius:12px;padding:14px 18px;font-weight:bold;font-size:16px;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}.gold{background:#b8872d;color:#fff}.light{background:#eee}
+.hide{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:#fff;border-radius:18px;overflow:hidden;border:1px solid #eadfce}.card img{width:100%;height:290px;object-fit:cover}
+.body{padding:14px}.price{font-size:21px;font-weight:bold;color:#9b6814}.old{text-decoration:line-through;color:#888;font-size:13px;margin-left:5px}
+.meta,.small{color:#666;margin:7px 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+.modal{display:none;position:fixed;inset:0;background:#0009;align-items:center;justify-content:center;padding:15px;z-index:20}
+.modal.show{display:flex}.box{background:#fff;padding:20px;border-radius:18px;width:min(680px,100%);max-height:90vh;overflow:auto}
+label{display:block;font-weight:bold;margin:12px 0 6px}input,select{width:100%;padding:13px;border:1px solid #ccc;border-radius:10px;font-size:16px;box-sizing:border-box}
+.preview{display:grid;gap:10px;margin-top:12px}.item{border:1px solid #ddd;border-radius:14px;padding:10px;background:#fafafa}
+.itemrow{display:grid;grid-template-columns:90px 1fr;gap:12px}.item img{width:90px;height:100px;object-fit:cover;border-radius:9px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.empty{text-align:center;padding:50px;border:2px dashed #ddd}
+.status{padding:10px;border-radius:10px;background:#f3eee5;margin-top:10px;font-weight:bold}.danger{color:#9b1c1c}.version{font-size:11px;opacity:.7}
+@media(max-width:520px){.two{grid-template-columns:1fr}.itemrow{grid-template-columns:1fr}.item img{width:100%;height:180px}}
+</style>
+</head>
+<body>
+<header>
+<h1>ÉLÉGANCE BOUTIQUE</h1>
+<p class="tagline">L’élégance à votre portée</p>
+<p>Mode Homme & Femme • Livraison en Côte d’Ivoire</p>
+<p>WhatsApp : <b>07 08 76 90 21</b></p>
+<p class="version">Version 2026.09 — catalogue stable</p>
+</header>
+
+<main>
+<div class="bar">
+<button id="loginBtn" class="gold">🔐 Espace propriétaire</button>
+<button id="addBtn" class="gold hide">＋ Ajouter plusieurs vêtements</button>
+<button id="outBtn" class="light hide">Se déconnecter</button>
+</div>
+<div id="grid" class="grid"></div>
+<div id="empty" class="empty hide">Aucun article pour le moment.</div>
+</main>
+
+<div id="loginBox" class="modal">
+<div class="box">
+<h2>Espace propriétaire</h2>
+<input id="pin" type="password" inputmode="numeric" placeholder="Code propriétaire">
+<div class="actions" style="margin-top:15px">
+<button id="checkPinBtn" class="gold">Entrer</button>
+<button id="closeLoginBtn" class="light">Annuler</button>
+</div>
+</div>
+</div>
+
+<div id="addBox" class="modal">
+<div class="box">
+<h2>Ajouter plusieurs vêtements</h2>
+<p class="small">Sélectionne une ou plusieurs photos. Chaque photo devient un article séparé.</p>
+<label>Photos</label>
+<input id="photos" type="file" accept="image/*" multiple>
+<div id="preview" class="preview"></div>
+<div id="status" class="status hide"></div>
+<div class="actions" style="margin-top:16px">
+<button id="saveProductsBtn" class="gold">Ajouter au catalogue</button>
+<button id="closeAddBtn" class="light">Annuler</button>
+</div>
+</div>
+</div>
+
+<script>
+const PIN='2580';
+const DB_NAME='EleganceBoutiqueDB';
+const DB_VERSION=1;
+const STORE='products';
+
+let products=[],selected=[],admin=false,db=null;
+
+const $=id=>document.getElementById(id);
+const grid=$('grid'),empty=$('empty'),preview=$('preview'),photos=$('photos'),status=$('status');
+
+function uid(){
+  return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);
+}
+function esc(s){
+  return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+function read(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+    r.readAsDataURL(file);
+  });
+}
+function compress(data,max=900,q=.68){
+  return new Promise((resolve,reject)=>{
+    const im=new Image();
+    im.onload=()=>{
+      const s=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));
+      const w=Math.max(1,Math.round(im.naturalWidth*s));
+      const h=Math.max(1,Math.round(im.naturalHeight*s));
+      const c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      const ctx=c.getContext('2d');
+      if(!ctx)return reject(new Error('Canvas indisponible'));
+      ctx.drawImage(im,0,0,w,h);
+      c.toBlob(b=>{
+        if(!b)return reject(new Error('Compression impossible'));
+        const r=new FileReader();
+        r.onload=()=>resolve(r.result);
+        r.onerror=()=>reject(r.error);
+        r.readAsDataURL(b);
+      },'image/jpeg',q);
+    };
+    im.onerror=()=>reject(new Error('Image illisible'));
+    im.src=data;
+  });
+}
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){
+      reject(new Error('IndexedDB indisponible sur ce navigateur.'));
+      return;
+    }
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=e=>{
+      const database=e.target.result;
+      if(!database.objectStoreNames.contains(STORE)){
+        database.createObjectStore(STORE,{keyPath:'id'});
+      }
+    };
+    req.onsuccess=e=>{db=e.target.result;resolve(db)};
+    req.onerror=()=>reject(req.error||new Error('Impossible d’ouvrir la base.'));
+  });
+}
+
+function idbGetAll(){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readonly');
+    const req=tx.objectStore(STORE).getAll();
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+function idbPutMany(items){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    const store=tx.objectStore(STORE);
+    items.forEach(x=>store.put(x));
+    tx.oncomplete=()=>resolve(true);
+    tx.onerror=()=>reject(tx.error||new Error('Échec d’enregistrement'));
+    tx.onabort=()=>reject(tx.error||new Error('Enregistrement annulé'));
+  });
+}
+
+function idbDelete(id){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete=()=>resolve(true);
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+
+async function load(){
+  try{
+    await openDB();
+    products=await idbGetAll();
+
+    // Migration de l’ancien catalogue localStorage si présent.
+    try{
+      const old=JSON.parse(localStorage.getItem('elegance_catalog_vFINAL')||'[]');
+      if(old.length && !products.length){
+        await idbPutMany(old);
+        products=old;
+      }
+    }catch(e){}
+  }catch(e){
+    products=[];
+  }
+  render();
+}
+
+function render(){
+  grid.innerHTML='';
+  empty.classList.toggle('hide',products.length>0);
+  products.forEach(p=>{
+    const card=document.createElement('article');
+    card.className='card';
+    card.innerHTML=`
+      <img src="${p.image}" alt="${esc(p.name)}">
+      <div class="body">
+        <b>${esc(p.name)}</b>
+        <div class="price">${Number(p.price).toLocaleString('fr-FR')} FCFA ${p.old?`<span class="old">${Number(p.old).toLocaleString('fr-FR')} FCFA</span>`:''}</div>
+        <div class="meta">Prix fixe • Livraison en Côte d’Ivoire</div>
+        <label>Choisir sa taille</label>
+        <select class="size">
+          <option value="">Choisir une taille</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+        </select>
+        <label>Lieu de livraison</label>
+        <input class="place" placeholder="Ex. Marcory, Cocody, Koumassi...">
+        <div class="actions" style="margin-top:10px">
+          <button class="gold order">Commander WhatsApp</button>
+          ${admin?'<button class="light del">Supprimer</button>':''}
+        </div>
+      </div>`;
+    card.querySelector('.order').onclick=()=>order(p,card);
+    if(admin){
+      card.querySelector('.del').onclick=async()=>{
+        try{await idbDelete(p.id);}catch(e){}
+        products=products.filter(x=>x.id!==p.id);
+        render();
+      };
+    }
+    grid.appendChild(card);
+  });
+}
+
+function order(p,card){
+  const size=card.querySelector('.size').value;
+  const place=card.querySelector('.place').value.trim();
+  if(!size){alert('Choisis ta taille avant de commander.');return}
+  if(!place){alert('Indique ton lieu de livraison.');return}
+  const msg=`Bonjour Élégance Boutique 👋
+Je souhaite commander :
+👕 Modèle : ${p.name}
+💰 Prix : ${Number(p.price).toLocaleString('fr-FR')} FCFA
+📏 Taille : ${size}
+📍 Lieu de livraison : ${place}`;
+  location.href='https://wa.me/2250708769021?text='+encodeURIComponent(msg);
+}
+
+function login(){
+  $('loginBox').classList.add('show');
+  $('pin').value='';
+  setTimeout(()=>$('pin').focus(),100);
+}
+function check(){
+  if($('pin').value.trim()===PIN){
+    admin=true;
+    $('loginBox').classList.remove('show');
+    $('addBtn').classList.remove('hide');
+    $('outBtn').classList.remove('hide');
+    render();
+  }else alert('Code invalide.');
+}
+
+function openAdd(){
+  if(!admin){login();return}
+  selected=[];
+  photos.value='';
+  preview.innerHTML='';
+  status.classList.add('hide');
+  $('addBox').classList.add('show');
+}
+function closeAdd(){$('addBox').classList.remove('show')}
+
+photos.onchange=async()=>{
+  selected=[];
+  preview.innerHTML='';
+  const fs=Array.from(photos.files||[]);
+  if(!fs.length)return;
+
+  status.classList.remove('hide');
+  status.textContent='Préparation des photos…';
+
+  for(const f of fs){
+    if(!f.type.startsWith('image/'))continue;
+    try{
+      const raw=await read(f);
+      const small=await compress(raw);
+      selected.push({image:small,name:'',price:'',old:''});
+    }catch(e){
+      alert('Une photo n’a pas pu être préparée.');
+    }
+  }
+  status.classList.add('hide');
+  draw();
+};
+
+function draw(){
+  preview.innerHTML='';
+  selected.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.className='item';
+    d.innerHTML=`
+      <div class="itemrow">
+        <img src="${p.image}">
+        <div>
+          <b>Vêtement ${i+1}</b>
+          <label>Nom du modèle</label>
+          <input class="name" placeholder="Ex. Chemise élégante">
+          <div class="two">
+            <div><label>Prix (FCFA)</label><input class="priceIn" type="number" inputmode="numeric" placeholder="12000"></div>
+            <div><label>Ancien prix (facultatif)</label><input class="oldIn" type="number" inputmode="numeric" placeholder="15000"></div>
+          </div>
+        </div>
+      </div>`;
+    d.querySelector('.name').value=p.name;
+    d.querySelector('.priceIn').value=p.price;
+    d.querySelector('.oldIn').value=p.old;
+    d.querySelector('.name').oninput=e=>p.name=e.target.value;
+    d.querySelector('.priceIn').oninput=e=>p.price=e.target.value;
+    d.querySelector('.oldIn').oninput=e=>p.old=e.target.value;
+    preview.appendChild(d);
+  });
+}
+
+$('saveProductsBtn').onclick=async()=>{
+  if(!selected.length){
+    alert('Sélectionne au moins une photo.');
+    return;
+  }
+
+  for(let i=0;i<selected.length;i++){
+    if(!selected[i].name.trim()||Number(selected[i].price)<=0){
+      alert('Complète le nom et le prix du vêtement '+(i+1)+'.');
+      return;
+    }
+  }
+
+  const btn=$('saveProductsBtn');
+  btn.disabled=true;
+  btn.textContent='Ajout en cours…';
+  status.classList.remove('hide');
+  status.textContent='Enregistrement du catalogue…';
+
+  const batch=selected.map(p=>({
+    id:uid(),
+    image:p.image,
+    name:p.name.trim(),
+    price:Number(p.price),
+    old:Number(p.old)||0,
+    sizes:['M','L','XL','XXL']
+  }));
+
+  try{
+    await idbPutMany(batch);
+    products=batch.concat(products);
+    render();
+
+    selected=[];
+    photos.value='';
+    preview.innerHTML='';
+    closeAdd();
+
+    alert(batch.length===1 ? 'Article ajouté au catalogue ✅' : batch.length+' articles ajoutés au catalogue ✅');
+  }catch(e){
+    console.error(e);
+    alert('Impossible d’enregistrer. Ferme les autres onglets du site puis réessaie. Si le problème continue, vide les données du site dans Chrome.');
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Ajouter au catalogue';
+    status.classList.add('hide');
+  }
+};
+
+$('loginBtn').onclick=login;
+$('checkPinBtn').onclick=check;
+$('closeLoginBtn').onclick=()=>$('loginBox').classList.remove('show');
+$('addBtn').onclick=openAdd;
+$('outBtn').onclick=()=>{
+  admin=false;
+  $('addBtn').classList.add('hide');
+  $('outBtn').classList.add('hide');
+  render();
+};
+$('closeAddBtn').onclick=closeAdd;
+$('pin').onkeydown=e=>{if(e.key==='Enter')check()};
+
+load();
+</script>
+</body>
+</html>
