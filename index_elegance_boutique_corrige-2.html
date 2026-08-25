@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Élégance Boutique</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#faf6ee;color:#241a10}header{background:#2d1b0e;color:#fff;text-align:center;padding:28px 15px}h1{font-family:Georgia,serif;margin:0;font-size:32px}.tagline{font-size:20px}main{max-width:1000px;margin:auto;padding:18px}.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}button{border:0;border-radius:12px;padding:14px 18px;font-weight:bold;font-size:16px}.gold{background:#b8872d;color:#fff}.light{background:#eee}.hide{display:none!important}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}.card{background:#fff;border-radius:18px;overflow:hidden;border:1px solid #eadfce}.card img{width:100%;height:290px;object-fit:cover}.body{padding:14px}.price{font-size:21px;font-weight:bold;color:#9b6814}.old{text-decoration:line-through;color:#888;font-size:13px;margin-left:5px}.meta,.small{color:#666;margin:7px 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}.modal{display:none;position:fixed;inset:0;background:#0009;align-items:center;justify-content:center;padding:15px;z-index:20}.modal.show{display:flex}.box{background:#fff;padding:20px;border-radius:18px;width:min(680px,100%);max-height:90vh;overflow:auto}label{display:block;font-weight:bold;margin:12px 0 6px}input,select{width:100%;padding:13px;border:1px solid #ccc;border-radius:10px;font-size:16px;box-sizing:border-box}.preview{display:grid;gap:10px;margin-top:12px}.item{border:1px solid #ddd;border-radius:14px;padding:10px;background:#fafafa}.itemrow{display:grid;grid-template-columns:90px 1fr;gap:12px}.item img{width:90px;height:100px;object-fit:cover;border-radius:9px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.empty{text-align:center;padding:50px;border:2px dashed #ddd}.status{padding:10px;border-radius:10px;background:#f3eee5;margin-top:10px;font-weight:bold}.danger{color:#9b1c1c}.version{font-size:11px;opacity:.7}
+</style>
+</head>
+<body>
+<header><h1>ÉLÉGANCE BOUTIQUE</h1><p class="tagline">L’élégance à votre portée</p><p>Mode Homme & Femme • Livraison en Côte d’Ivoire</p><p>WhatsApp : <b>07 08 76 90 21</b></p><div class="version">Version 2026.08 — ajout catalogue</div></header>
+<main>
+<div class="bar"><button id="loginBtn" class="gold">🔐 Espace propriétaire</button><button id="addBtn" class="gold hide">＋ Ajouter plusieurs vêtements</button><button id="outBtn" class="light hide">Se déconnecter</button></div>
+<div id="grid" class="grid"></div><div id="empty" class="empty hide">Aucun article pour le moment.</div>
+</main>
+<div id="loginBox" class="modal"><div class="box"><h2>Espace propriétaire</h2><input id="pin" type="password" inputmode="numeric" placeholder="Code propriétaire"><div class="actions" style="margin-top:15px"><button id="checkPinBtn" class="gold">Entrer</button><button id="closeLoginBtn" class="light">Annuler</button></div></div></div>
+<div id="addBox" class="modal"><div class="box"><h2>Ajouter plusieurs vêtements</h2><p class="small">Sélectionne plusieurs photos. Chaque photo devient un article séparé.</p><label>Photos</label><input id="photos" type="file" accept="image/*" multiple><div id="preview" class="preview"></div><div id="status" class="status hide"></div><div class="actions" style="margin-top:16px"><button id="saveProductsBtn" class="gold">Ajouter au catalogue</button><button id="closeAddBtn" class="light">Annuler</button></div></div></div>
+<script>
+const PIN='2580', KEY='elegance_catalog_vFINAL';
+let products=[],selected=[],admin=false;
+const $=id=>document.getElementById(id);
+const grid=$('grid'),empty=$('empty'),preview=$('preview'),photos=$('photos'),status=$('status');
+
+function uid(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)}
+function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function read(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(file)})}
+function compress(data,max=700,q=.55){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{let s=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));let w=Math.max(1,Math.round(im.naturalWidth*s)),h=Math.max(1,Math.round(im.naturalHeight*s));let c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);c.toBlob(b=>{if(!b)return reject();let r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(b)},'image/jpeg',q)};im.onerror=reject;im.src=data})}
+// Stockage robuste : localStorage en priorité, IndexedDB en secours.
+const DB_NAME='elegance_boutique_db', DB_STORE='catalogue', DB_KEY='products';
+function openDB(){return new Promise((resolve,reject)=>{try{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(DB_STORE))req.result.createObjectStore(DB_STORE)};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)}catch(e){reject(e)}})}
+function idbLoad(){return openDB().then(db=>new Promise((resolve,reject)=>{const req=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(DB_KEY);req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error)}))}
+function idbSave(data){return openDB().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).put(data,DB_KEY);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error)}))}
+async function load(){let loaded=false;try{const raw=localStorage.getItem(KEY);if(raw!==null){products=JSON.parse(raw)||[];loaded=true}}catch(e){}if(!loaded){try{products=await idbLoad();loaded=true}catch(e){}}render()}
+async function saveAll(){try{localStorage.setItem(KEY,JSON.stringify(products));return true}catch(e){}try{await idbSave(products);return true}catch(e){}return false}
+function render(){grid.innerHTML='';empty.classList.toggle('hide',products.length>0);products.forEach(p=>{let card=document.createElement('article');card.className='card';card.innerHTML=`<img src="${p.image}" alt="${esc(p.name)}"><div class="body"><b>${esc(p.name)}</b><div class="price">${Number(p.price).toLocaleString('fr-FR')} FCFA ${p.old?`<span class="old">${Number(p.old).toLocaleString('fr-FR')} FCFA</span>`:''}</div><div class="meta">Prix fixe • Livraison en Côte d’Ivoire</div><label>Choisir sa taille</label><select class="size"><option value="">Choisir une taille</option><option>M</option><option>L</option><option>XL</option><option>XXL</option></select><label>Lieu de livraison</label><input class="place" placeholder="Ex. Marcory, Cocody, Koumassi..."><div class="actions" style="margin-top:10px"><button class="gold order">Commander WhatsApp</button>${admin?'<button class="light del">Supprimer</button>':''}</div></div>`;card.querySelector('.order').onclick=()=>order(p,card);if(admin)card.querySelector('.del').onclick=async()=>{products=products.filter(x=>x.id!==p.id);render();await saveAll()};grid.appendChild(card)})}
+function order(p,card){let size=card.querySelector('.size').value,place=card.querySelector('.place').value.trim();if(!size){alert('Choisis ta taille avant de commander.');return}if(!place){alert('Indique ton lieu de livraison.');return}let msg=`Bonjour Élégance Boutique 👋\nJe souhaite commander :\n👕 Modèle : ${p.name}\n💰 Prix : ${Number(p.price).toLocaleString('fr-FR')} FCFA\n📏 Taille : ${size}\n📍 Lieu de livraison : ${place}`;location.href='https://wa.me/2250708769021?text='+encodeURIComponent(msg)}
+function login(){$('loginBox').classList.add('show');$('pin').value='';setTimeout(()=>$('pin').focus(),100)}
+function check(){if($('pin').value.trim()===PIN){admin=true;$('loginBox').classList.remove('show');$('addBtn').classList.remove('hide');$('outBtn').classList.remove('hide');render()}else alert('Code invalide.')}
+function openAdd(){if(!admin)return login();selected=[];photos.value='';preview.innerHTML='';status.classList.add('hide');$('addBox').classList.add('show')}
+function closeAdd(){$('addBox').classList.remove('show')}
+photos.onchange=async()=>{selected=[];preview.innerHTML='';let fs=Array.from(photos.files||[]);if(!fs.length)return;status.classList.remove('hide');status.textContent='Préparation des photos…';for(let f of fs){if(!f.type.startsWith('image/'))continue;let raw=await read(f);let small=await compress(raw).catch(()=>raw);selected.push({image:small,name:'',price:'',old:''})}status.classList.add('hide');draw()}
+function draw(){preview.innerHTML='';selected.forEach((p,i)=>{let d=document.createElement('div');d.className='item';d.innerHTML=`<div class="itemrow"><img src="${p.image}"><div><b>Vêtement ${i+1}</b><label>Nom du modèle</label><input class="name" placeholder="Ex. Chemise élégante"><div class="two"><div><label>Prix (FCFA)</label><input class="priceIn" type="number" inputmode="numeric" placeholder="12000"></div><div><label>Ancien prix (facultatif)</label><input class="oldIn" type="number" inputmode="numeric" placeholder="15000"></div></div></div></div>`;d.querySelector('.name').value=p.name;d.querySelector('.priceIn').value=p.price;d.querySelector('.oldIn').value=p.old;d.querySelector('.name').oninput=e=>p.name=e.target.value;d.querySelector('.priceIn').oninput=e=>p.price=e.target.value;d.querySelector('.oldIn').oninput=e=>p.old=e.target.value;preview.appendChild(d)})}
+
+// IMPORTANT : le clic ajoute d'abord en mémoire et dans le catalogue visible.
+// La sauvegarde locale ne bloque jamais l'ajout.
+$('saveProductsBtn').onclick=async()=>{
+ if(!selected.length){alert('Sélectionne au moins une photo.');return}
+ for(let i=0;i<selected.length;i++){if(!selected[i].name.trim()||Number(selected[i].price)<=0){alert('Complète le nom et le prix du vêtement '+(i+1)+'.');return}}
+ const btn=$('saveProductsBtn');btn.disabled=true;btn.textContent='Ajout en cours…';
+ const batch=selected.map(p=>({id:uid(),image:p.image,name:p.name.trim(),price:Number(p.price),old:Number(p.old)||0,sizes:['M','L','XL','XXL']}));
+ // AJOUT IMMÉDIAT
+ products=batch.concat(products);render();
+ // tentative de sauvegarde; même si elle échoue, l'article est déjà ajouté à l'écran
+ const ok=await saveAll();
+ selected=[];photos.value='';preview.innerHTML='';closeAdd();btn.disabled=false;btn.textContent='Ajouter au catalogue';
+ if(!ok) alert('Article ajouté à cette page, mais ce navigateur bloque tous les stockages permanents. Désactive le blocage des données du site pour conserver les articles après fermeture.');
+};
+$('loginBtn').onclick=login;$('checkPinBtn').onclick=check;$('closeLoginBtn').onclick=()=>$('loginBox').classList.remove('show');$('addBtn').onclick=openAdd;$('outBtn').onclick=()=>{admin=false;$('addBtn').classList.add('hide');$('outBtn').classList.add('hide');render()};$('closeAddBtn').onclick=closeAdd;$('pin').onkeydown=e=>{if(e.key==='Enter')check()};
+load();
+</script></body></html>
